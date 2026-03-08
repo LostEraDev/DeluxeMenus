@@ -21,6 +21,7 @@ public class MenuOptions {
     private final boolean parsePlaceholdersInArguments;
     private final boolean parsePlaceholdersAfterArguments;
     private final boolean enableBypassPerm;
+    private final boolean hideInventoryGlyph;
 
     private final List<String> commands;
     private final boolean registerCommands;
@@ -43,6 +44,7 @@ public class MenuOptions {
         this.parsePlaceholdersInArguments = builder.parsePlaceholdersInArguments;
         this.parsePlaceholdersAfterArguments = builder.parsePlaceholdersAfterArguments;
         this.enableBypassPerm = builder.enableBypassPerm;
+        this.hideInventoryGlyph = false;
 
         this.commands = builder.commands;
         this.registerCommands = builder.registerCommands;
@@ -69,6 +71,10 @@ public class MenuOptions {
 
     public @NotNull InventoryType type() {
         return this.type;
+    }
+
+    public @NotNull boolean hideInventoryGlyph() {
+        return this.hideInventoryGlyph;
     }
 
     public int size() {
@@ -135,6 +141,7 @@ public class MenuOptions {
         return MenuOptions.builder(this.name, this.title)
                 .type(this.type)
                 .size(this.size)
+                .hideInventoryGlyph(this.hideInventoryGlyph)
                 .updateInterval(this.updateInterval)
                 .refreshInterval(this.refreshInterval)
                 .refresh(this.refresh)
@@ -163,6 +170,7 @@ public class MenuOptions {
         private boolean parsePlaceholdersInArguments = false;
         private boolean parsePlaceholdersAfterArguments = false;
         private boolean enableBypassPerm = false;
+        private boolean hideInventoryGlyph = false;
 
         private List<String> commands = List.of();
         private boolean registerCommands = false;
@@ -196,6 +204,11 @@ public class MenuOptions {
 
         public MenuOptionsBuilder size(final int size) {
             this.size = size;
+            return this;
+        }
+
+        public MenuOptionsBuilder hideInventoryGlyph(final boolean hideInventoryGlyph) {
+            this.hideInventoryGlyph = hideInventoryGlyph;
             return this;
         }
 

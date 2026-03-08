@@ -27,7 +27,9 @@ repositories {
 dependencies {
     compileOnly(libs.spigot)
 
-    compileOnly(libs.vault)
+    compileOnly(fileTree("libs") { include("*.jar") })
+
+    //compileOnly(libs.vault)
     compileOnly(libs.authlib)
 
     compileOnly(libs.headdb)
@@ -38,7 +40,7 @@ dependencies {
     compileOnly(libs.oraxen)
     compileOnly(libs.mythiclib)
     compileOnly(libs.mmoitems)
-    compileOnly(libs.score)
+    //compileOnly(libs.score)
     compileOnly(libs.sig)
 
     compileOnly(libs.papi)

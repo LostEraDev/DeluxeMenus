@@ -467,6 +467,8 @@ public class DeluxeMenusConfig {
             builder.registerCommands(c.getBoolean(pre + "register_command", false));
         }
 
+        builder.hideInventoryGlyph(c.getBoolean(pre + "hide_inventory_glyph", false));
+
         List<String> argumentNames = new ArrayList<>();
         List<RequirementList> argumentRequirements = new ArrayList<>();
 
