@@ -44,7 +44,7 @@ public class MenuOptions {
         this.parsePlaceholdersInArguments = builder.parsePlaceholdersInArguments;
         this.parsePlaceholdersAfterArguments = builder.parsePlaceholdersAfterArguments;
         this.enableBypassPerm = builder.enableBypassPerm;
-        this.hideInventoryGlyph = false;
+        this.hideInventoryGlyph = builder.hideInventoryGlyph;
 
         this.commands = builder.commands;
         this.registerCommands = builder.registerCommands;
