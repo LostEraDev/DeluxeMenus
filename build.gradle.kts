@@ -1,5 +1,6 @@
 plugins {
     java
+    id("maven-publish")
     id("com.gradleup.shadow") version("8.3.5")
     id("com.github.ben-manes.versions") version("0.51.0")
 }
@@ -70,6 +71,30 @@ tasks {
     processResources {
         filesMatching("plugin.yml") {
             expand("version" to rootProject.version)
+        }
+    }
+}
+
+
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            artifact(tasks.named("jar"))
+
+            groupId = project.group.toString()
+            artifactId = rootProject.name.lowercase()
+            version = project.version.toString()
+        }
+    }
+
+    repositories {
+        maven {
+            name = "LostEra-Repo"
+            url = uri("https://repo.alsyinfra.dev/repository/lostera/")
+            credentials {
+                username = project.findProperty("nexusUsername") as String?
+                password = project.findProperty("nexusPassword") as String?
+            }
         }
     }
 }
