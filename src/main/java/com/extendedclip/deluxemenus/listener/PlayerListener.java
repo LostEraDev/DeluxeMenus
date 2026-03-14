@@ -92,6 +92,11 @@ public class PlayerListener extends Listener {
         final Player player = (Player) event.getPlayer();
 
         if (Menu.isInMenu(player)) {
+            final Optional<MenuHolder> optHolder = Menu.getMenuHolder(player);
+            if (optHolder.isPresent() && optHolder.get().isPacketMode()) {
+                return;
+            }
+
             Menu.closeMenu(plugin, player, false);
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
                 Menu.cleanInventory(plugin, player);
@@ -116,6 +121,11 @@ public class PlayerListener extends Listener {
         }
 
         final MenuHolder holder = optionalHolder.get();
+
+        if (holder.isPacketMode()) {
+            event.setCancelled(true);
+            return;
+        }
 
         if (holder.getMenu().isEmpty()) {
             Menu.closeMenu(plugin, player, true);

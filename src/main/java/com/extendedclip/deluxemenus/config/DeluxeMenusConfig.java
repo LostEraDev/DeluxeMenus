@@ -468,6 +468,7 @@ public class DeluxeMenusConfig {
         }
 
         builder.hideInventoryGlyph(c.getBoolean(pre + "hide_inventory_glyph", false));
+        builder.packetGui(c.getBoolean(pre + "packet_gui", false));
 
         List<String> argumentNames = new ArrayList<>();
         List<RequirementList> argumentRequirements = new ArrayList<>();

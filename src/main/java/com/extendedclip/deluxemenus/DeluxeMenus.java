@@ -14,6 +14,7 @@ import com.extendedclip.deluxemenus.menu.options.HeadType;
 import com.extendedclip.deluxemenus.menu.options.MenuOptions;
 import com.extendedclip.deluxemenus.nbt.NbtProvider;
 import com.extendedclip.deluxemenus.persistentmeta.PersistentMetaHandler;
+import com.extendedclip.deluxemenus.packet.DeluxePacketMenuManager;
 import com.extendedclip.deluxemenus.placeholder.Expansion;
 import com.extendedclip.deluxemenus.updatechecker.UpdateChecker;
 import com.extendedclip.deluxemenus.utils.DebugLevel;
@@ -56,6 +57,8 @@ public class DeluxeMenus extends JavaPlugin {
     private ItemStack head;
     private Map<String, ItemHook> itemHooks;
 
+    private DeluxePacketMenuManager packetMenuManager;
+
     private final GeneralConfig generalConfig = new GeneralConfig(this);
     private DeluxeMenusConfig menuConfig;
 
@@ -90,6 +93,7 @@ public class DeluxeMenus extends JavaPlugin {
 
         hookIntoVault();
         setUpItemHooks();
+        setUpPacketMenuSystem();
 
         this.menuConfig = new DeluxeMenusConfig(this);
         if (this.menuConfig.loadDefConfig()) {
@@ -118,6 +122,10 @@ public class DeluxeMenus extends JavaPlugin {
         if (this.audiences != null) {
             this.audiences.close();
             this.audiences = null;
+        }
+
+        if (this.packetMenuManager != null) {
+            this.packetMenuManager.disable();
         }
 
         Menu.unloadForShutdown(this);
@@ -300,6 +308,22 @@ public class DeluxeMenus extends JavaPlugin {
         if (Bukkit.getPluginManager().isPluginEnabled("SimpleItemGenerator")) {
             this.itemHooks.put("simpleitemgenerator", new SimpleItemGeneratorHook(this));
         }
+    }
+
+    public DeluxePacketMenuManager getPacketMenuManager() {
+        return packetMenuManager;
+    }
+
+    private void setUpPacketMenuSystem() {
+        try {
+            Class.forName("com.github.retrooper.packetevents.PacketEvents");
+        } catch (ClassNotFoundException e) {
+            this.debug(DebugLevel.HIGHEST, Level.INFO, "PacketEvents not found. Packet-based GUI menus will not be available.");
+            return;
+        }
+
+        this.packetMenuManager = new DeluxePacketMenuManager(this);
+        this.packetMenuManager.init();
     }
 
     private void setUpBungeeCordMessaging() {

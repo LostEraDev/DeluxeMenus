@@ -1,8 +1,6 @@
 package com.extendedclip.deluxemenus.menu;
 
 import com.extendedclip.deluxemenus.DeluxeMenus;
-import com.extendedclip.deluxemenus.action.ClickHandler;
-import com.extendedclip.deluxemenus.dupe.MenuItemMarker;
 import com.extendedclip.deluxemenus.events.DeluxeMenusOpenMenuEvent;
 import com.extendedclip.deluxemenus.events.DeluxeMenusPreOpenMenuEvent;
 import com.extendedclip.deluxemenus.menu.command.RegistrableMenuCommand;
@@ -22,6 +20,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import com.extendedclip.deluxemenus.packet.DeluxePacketMenuManager;
 
 public class Menu {
 
@@ -169,6 +168,12 @@ public class Menu {
     }
 
     public static void cleanInventory(final @NotNull DeluxeMenus plugin, final @NotNull Player player) {
+        // Skip clean if in packet mode — no real items were placed in the player's inventory
+        final Optional<MenuHolder> optHolder = getMenuHolder(player);
+        if (optHolder.isPresent() && optHolder.get().isPacketMode()) {
+            return;
+        }
+
         for (final ItemStack itemStack : player.getInventory().getContents()) {
             if (itemStack == null) continue;
             if (!plugin.getMenuItemMarker().isMarked(itemStack)) continue;
@@ -199,10 +204,24 @@ public class Menu {
         }
 
         if (close) {
-            Bukkit.getScheduler().runTask(plugin, () -> {
-                player.closeInventory();
-                cleanInventory(plugin, player);
-            });
+            if (holder.isPacketMode()) {
+                final DeluxePacketMenuManager packetManager = plugin.getPacketMenuManager();
+                if (packetManager != null) {
+                    Bukkit.getScheduler().runTask(plugin, () -> {
+                        packetManager.closePacketMenu(player, true);
+                    });
+                }
+            } else {
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    player.closeInventory();
+                    cleanInventory(plugin, player);
+                });
+            }
+        } else if (holder.isPacketMode()) {
+            final DeluxePacketMenuManager packetManager = plugin.getPacketMenuManager();
+            if (packetManager != null) {
+                packetManager.untrackHolder(player.getUniqueId());
+            }
         }
         menuHolders.remove(holder);
         lastOpenedMenus.put(player.getUniqueId(), holder.getMenu().orElse(null));
@@ -304,11 +323,12 @@ public class Menu {
 
                     int slot = item.options().slot();
 
-                    if (slot >= this.options.size()) {
+                    final int maxSlot = this.options.packetGui() ? this.options.size() + 36 : this.options.size();
+                    if (slot >= maxSlot) {
                         plugin.debug(
                                 DebugLevel.HIGHEST,
                                 Level.WARNING,
-                                "Item set to slot " + slot + " for menu: " + this.options.name() + " exceeds the inventory size!",
+                                "Item set to slot " + slot + " for menu: " + this.options.name() + " exceeds the " + (this.options.packetGui() ? "packet gui" : "inventory") + " size!",
                                 "This item will not be added to the menu!"
                         );
                         continue;
@@ -364,11 +384,12 @@ public class Menu {
 
                 int slot = item.options().slot();
 
-                if (slot >= this.options.size()) {
+                final int maxItemSlot = this.options.packetGui() ? this.options.size() + 36 : this.options.size();
+                if (slot >= maxItemSlot) {
                     plugin.debug(
                             DebugLevel.HIGHEST,
                             Level.WARNING,
-                            "Item set to slot " + slot + " for menu: " + this.options.name() + " exceeds the inventory size!",
+                            "Item set to slot " + slot + " for menu: " + this.options.name() + " exceeds the " + (this.options.packetGui() ? "packet gui" : "inventory") + " size!",
                             "This item will not be added to the menu!"
                     );
                     continue;
@@ -378,7 +399,9 @@ public class Menu {
                     update = true;
                 }
 
-                inventory.setItem(item.options().slot(), iStack);
+                if (slot < this.options.size()) {
+                    inventory.setItem(slot, iStack);
+                }
             }
 
             final boolean updatePlaceholders = update;
@@ -392,20 +415,40 @@ public class Menu {
                     closeMenu(plugin, holder.getViewer(), false);
                 }
 
-                viewer.openInventory(inventory);
+                final DeluxePacketMenuManager packetManager = plugin.getPacketMenuManager();
+                if (options.packetGui() && packetManager != null && packetManager.isAvailable()
+                        && options.type() == InventoryType.CHEST) {
+                    packetManager.openPacketMenu(viewer, holder, options.size(), title);
+                } else {
+                    if (options.packetGui() && (packetManager == null || !packetManager.isAvailable())) {
+                        plugin.debug(
+                                DebugLevel.HIGHEST,
+                                Level.WARNING,
+                                "Menu " + options.name() + " has packet_gui enabled but PacketEvents is not available. Falling back to Bukkit inventory."
+                        );
+                    }
+                    if (options.packetGui() && options.type() != InventoryType.CHEST) {
+                        plugin.debug(
+                                DebugLevel.HIGHEST,
+                                Level.WARNING,
+                                "Menu " + options.name() + " has packet_gui enabled but inventory type is not CHEST. Falling back to Bukkit inventory."
+                        );
+                    }
+                    viewer.openInventory(inventory);
+                }
                 menuHolders.add(holder);
 
-        if (updatePlaceholders) {
-          holder.startUpdatePlaceholdersTask();
-        }
-      });
+                if (updatePlaceholders) {
+                    holder.startUpdatePlaceholdersTask();
+                }
+            });
 
-      Bukkit.getScheduler().runTask(plugin, () -> {
-        DeluxeMenusOpenMenuEvent openEvent = new DeluxeMenusOpenMenuEvent(viewer, holder);
-        Bukkit.getPluginManager().callEvent(openEvent);
-      });
-    });
-  }
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                DeluxeMenusOpenMenuEvent openEvent = new DeluxeMenusOpenMenuEvent(viewer, holder);
+                Bukkit.getPluginManager().callEvent(openEvent);
+            });
+        });
+    }
 
     public void refreshForAll() {
         menuHolders.stream().filter(menuHolder -> menuHolder.getMenuName().equalsIgnoreCase(options.name())).forEach(MenuHolder::refreshMenu);

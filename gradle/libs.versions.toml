@@ -13,6 +13,7 @@ mmoitems = "6.10-SNAPSHOT"
 papi = "2.11.6"
 score = "5.25.3.9"
 sig = "1.5.0"
+packetevents = "2.11.1"
 bstats = "3.1.0"
 
 # Implementation
@@ -36,6 +37,7 @@ mmoitems = { module = "net.Indyuce:MMOItems-API", version.ref = "mmoitems" }
 papi = { module = "me.clip:placeholderapi", version.ref = "papi" }
 score = { module = "com.github.Ssomar-Developement:SCore", version.ref = "score" }
 sig = { module = "io.github.valerashimchuck:simpleitemgenerator-api", version.ref = "sig" }
+packetevents = { module = "com.github.retrooper:packetevents-spigot", version.ref = "packetevents" }
 
 # Implementation
 nashorn = { module = "org.openjdk.nashorn:nashorn-core", version.ref = "nashorn" }

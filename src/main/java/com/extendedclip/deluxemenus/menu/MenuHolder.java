@@ -33,6 +33,8 @@ public class MenuHolder implements InventoryHolder {
     private BukkitTask refreshTask = null;
     private Inventory inventory;
     private boolean updating;
+    private boolean packetMode;
+    private int packetWindowId = -1;
     private boolean parsePlaceholdersInArguments;
     private boolean parsePlaceholdersAfterArguments;
     private Map<String, String> typedArgs;
@@ -142,11 +144,15 @@ public class MenuHolder implements InventoryHolder {
 
             final Set<MenuItem> active = new HashSet<>();
 
-            for (int i = 0; i < getInventory().getSize(); i++) {
+            final int maxSlot = packetMode ? getInventory().getSize() + 36 : getInventory().getSize();
+
+            for (int i = 0; i < maxSlot; i++) {
                 TreeMap<Integer, MenuItem> e = menu.getMenuItems().get(i);
 
                 if (e == null) {
-                    getInventory().setItem(i, null);
+                    if (i < getInventory().getSize()) {
+                        getInventory().setItem(i, null);
+                    }
                     continue;
                 }
 
@@ -167,7 +173,7 @@ public class MenuHolder implements InventoryHolder {
                     }
                 }
 
-                if (!m) {
+                if (!m && i < getInventory().getSize()) {
                     getInventory().setItem(i, null);
                 }
             }
@@ -186,7 +192,7 @@ public class MenuHolder implements InventoryHolder {
 
                     int slot = item.options().slot();
 
-                    if (slot >= menu.options().size()) {
+                    if (!packetMode && slot >= menu.options().size()) {
                         continue;
                     }
 
@@ -194,7 +200,9 @@ public class MenuHolder implements InventoryHolder {
                         update = true;
                     }
 
-                    getInventory().setItem(item.options().slot(), iStack);
+                    if (slot < getInventory().getSize()) {
+                        getInventory().setItem(slot, iStack);
+                    }
                 }
 
                 setActiveItems(active);
@@ -203,6 +211,10 @@ public class MenuHolder implements InventoryHolder {
                     startUpdatePlaceholdersTask();
                 } else if(!update && updateTask != null) {
                     stopPlaceholderUpdate();
+                }
+
+                if (packetMode && plugin.getPacketMenuManager() != null) {
+                    plugin.getPacketMenuManager().resyncWindow(getViewer(), MenuHolder.this);
                 }
 
                 setUpdating(false);
@@ -272,7 +284,15 @@ public class MenuHolder implements InventoryHolder {
 
                     if (item.options().updatePlaceholders()) {
 
-                        ItemStack i = inventory.getItem(item.options().slot());
+                        final int slot = item.options().slot();
+
+                        ItemStack i;
+                        if (slot >= inventory.getSize()) {
+                            if (!packetMode) continue;
+                            i = item.getItemStack(MenuHolder.this);
+                        } else {
+                            i = inventory.getItem(slot);
+                        }
 
                         if (i == null) {
                             continue;
@@ -288,7 +308,7 @@ public class MenuHolder implements InventoryHolder {
                                 }
                             } catch (Exception exception) {
                                 plugin.printStacktrace(
-                                        "Something went wrong while updating item in slot " + item.options().slot() +
+                                        "Something went wrong while updating item in slot " + slot +
                                                 ". Invalid dynamic amount: " + setPlaceholdersAndArguments(item.options().dynamicAmount().get()),
                                         exception
                                 );
@@ -307,6 +327,12 @@ public class MenuHolder implements InventoryHolder {
 
                         i.setItemMeta(meta);
                         i.setAmount(amt);
+
+                        if (packetMode && plugin.getPacketMenuManager() != null) {
+                            plugin.getPacketMenuManager().sendSetSlot(
+                                    getViewer(), packetWindowId, slot, i
+                            );
+                        }
                     }
                 }
             }
@@ -365,6 +391,22 @@ public class MenuHolder implements InventoryHolder {
 
     public Player getPlaceholderPlayer() {
         return placeholderPlayer;
+    }
+
+    public boolean isPacketMode() {
+        return packetMode;
+    }
+
+    public void setPacketMode(boolean packetMode) {
+        this.packetMode = packetMode;
+    }
+
+    public int getPacketWindowId() {
+        return packetWindowId;
+    }
+
+    public void setPacketWindowId(int packetWindowId) {
+        this.packetWindowId = packetWindowId;
     }
 
     public @NotNull DeluxeMenus getPlugin() {

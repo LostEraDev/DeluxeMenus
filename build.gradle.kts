@@ -23,6 +23,7 @@ repositories {
     maven("https://repo.nexomc.com/releases/")
     maven("https://repo.oraxen.com/releases")
     maven("https://jitpack.io")
+    maven("https://repo.codemc.io/repository/maven-releases/")
 }
 
 dependencies {
@@ -43,6 +44,7 @@ dependencies {
     compileOnly(libs.mmoitems)
     //compileOnly(libs.score)
     compileOnly(libs.sig)
+    compileOnly(libs.packetevents)
 
     compileOnly(libs.papi)
 
