@@ -275,6 +275,10 @@ public class ClickActionTask extends BukkitRunnable {
                 plugin.connect(player, executable);
                 break;
 
+            case PROXY:
+                plugin.proxyCommand(player, executable);
+                break;
+
             case JSON_MESSAGE:
                 AdventureUtils.sendJson(plugin, player, executable);
                 break;

@@ -116,6 +116,7 @@ public class DeluxeMenus extends JavaPlugin {
     @Override
     public void onDisable() {
         Bukkit.getMessenger().unregisterOutgoingPluginChannel(this, "BungeeCord");
+        Bukkit.getMessenger().unregisterOutgoingPluginChannel(this, "deluxemenus:proxy");
 
         Bukkit.getScheduler().cancelTasks(this);
 
@@ -170,6 +171,20 @@ public class DeluxeMenus extends JavaPlugin {
         }
 
         p.sendPluginMessage(this, "BungeeCord", out.toByteArray());
+    }
+
+    public void proxyCommand(Player p, String command) {
+        ByteArrayDataOutput out = ByteStreams.newDataOutput();
+
+        try {
+            out.writeUTF("ProxyCommand");
+            out.writeUTF(command);
+        } catch (Exception e) {
+            debug(DebugLevel.HIGHEST, Level.SEVERE, "There was a problem attempting to run proxy command '" + command + "' for " + p.getName() + "!");
+            printStacktrace("There was a problem attempting to run proxy command '" + command + "' for " + p.getName() + "!", e);
+        }
+
+        p.sendPluginMessage(this, "deluxemenus:proxy", out.toByteArray());
     }
 
     public void sms(CommandSender s, Component msg) {
@@ -328,6 +343,7 @@ public class DeluxeMenus extends JavaPlugin {
 
     private void setUpBungeeCordMessaging() {
         Bukkit.getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
+        Bukkit.getMessenger().registerOutgoingPluginChannel(this, "deluxemenus:proxy");
     }
 
     private void setUpUpdateChecker() {

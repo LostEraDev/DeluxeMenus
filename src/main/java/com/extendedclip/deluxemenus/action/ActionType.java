@@ -48,7 +48,9 @@ public enum ActionType {
   BROADCAST_JSON("[broadcastjson]", "Broadcast a json message to all online players",
       "- '[broadcastjson] {\"text\":\"message\"}'"),
   PLACEHOLDER("[placeholder]", "Parse placeholders for a player without any chat or console output",
-      "- '[placeholder] %placeholder%'");
+      "- '[placeholder] %placeholder%'"),
+  PROXY("[proxy]", "Execute a command on the proxy (Velocity/BungeeCord) as the player",
+      "- '[proxy] <command with no slash>'");
 
   private static final Map<String, ActionType> BY_NAME = Arrays.stream(values())
       .collect(Collectors.toMap(e -> e.name().toUpperCase(Locale.ROOT), Function.identity()));
